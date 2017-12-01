@@ -1,0 +1,173 @@
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Rich Chat</title>
+
+    <link rel="icon" type="image/png" href="images/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="css/rich_chat_style.css" />    
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,900" rel="stylesheet" type="text/css"/>
+    <script src="sdk/bbm_sdk_web.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+    <!--
+      Include the firebase APIs, the config we are using to access the
+      firebase database and the key provider we will be using to to get and
+      set the keys used by the BBM SDK
+    -->
+    <script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
+    <!--<script src="../common/firebase/config.js"></script>
+    <script src="../common/firebase/FirebaseKeyProvider.js"></script>-->
+	<script src="js/CosmosKeyProvider.js"></script>
+  </head>
+  <body>
+    <div class="headerBanner">
+      <img class="headerImage" id="headerImage" src="./images/favicon.ico">
+      <p class="headerText" id = "headerText">Rich Chat</p>
+      <div class="headerButtonsDiv">
+        <div class="headerButtonDiv">
+          <button class="settingsButton" onclick="showSettingsPane()" id="settingsButton"></button>
+        </div>
+        <div class="rightSidePaneBtnDiv" hidden>
+          <button class = "rightSidePaneBtn" onclick="toggleMediaPane()"></button>
+        </div>
+      </div>
+    </div>
+    <div class="mainScreen" id = "mainScreen" style="display:none">
+      <div class="tabPane">
+        <div class="listHeader" id="listHeader">
+          <div class="listHeaderText" id="listHeaderText"></div>
+          <div class="listHeaderButtonWrapper">
+            <button class="listHeaderButton" onclick="showTab()" id="listHeaderButton"></button>
+          </div>
+        </div>
+        <div class="chatList" id = "chatList">
+          <div id = "chatListRowPlaceholder"></div>
+        </div>
+        <div class="contactList" id = "contactList"></div>
+		<div class="fileViewer" id = "fileViewer">    <div id="viewer" style="width: 100%;">
+
+
+    </div></div>
+			<div class="filePicker" id = "filePicker"> 
+			<div id="treeview" class="treeview">
+			</div>  </div>
+        <div class="tabFooter" id="tabFooter">
+          <div class="subjectAreaWrapper" id="subjectAreaWrapper">
+            <div class="inputArea">
+              <div class="inputPlaceholder" id= "subjectInputPlaceholder" style="visibility: visible">Enter chat name</div>
+              <div class="input" id="subjectInput" contenteditable="true"></div>
+            </div>
+          </div>
+           <div class="centerGap" id="centerGap"></div>
+          <div class="startChatButtonWrapper">
+            <button class="startChatButton" onclick="startChat()" id="startChatButton" disabled>Start Chat</button>
+          </div>
+          <div class="startChatInvitePolicyWrapper" id="startChatInvitePolicyWrapper">
+              <input type="checkbox" id="chatInvitePolicyIsParticipantsOnly" checked="">
+              <label for="chatInvitePolicyIsParticipantsOnly">Allow participants to invite others</label>
+          </div>
+        </div>
+      </div>
+      <div class="contentPane">
+        <div class="p2pSendDragDropOverlay" id="p2pSendDragDropOverlay" ondrop="onP2pSendDropHandler(event)" ondragover="onP2pSendDragoverHandler(event)" ondragleave="onP2pSendDragendHandler(event)" hidden>
+          <div class="p2pSendDragDropOverlayText">Drop to send files to the participants</div>
+        </div>
+        <div class="conversationPane" id="conversationPane" ondrop="onP2pSendDropHandler(event)" ondragover="onP2pSendDragoverHandler(event)" ondragleave="onP2pSendDragendIgnoredHandler(event)">
+          <div class="conversationPaneBanner" id="conversationPaneBanner"><p>hello</p></div>
+          <div class="participantsPane" id="participantsPane"></div>
+          <div class="bubbleList" id="bubbleList">
+          </div>
+          <div class="isTypingBar" id="isTypingBar">
+            <img class="isTypingImg" src="./images/isTyping.png">
+            <div class="isTypingTextWrapper" id = "isTypingText"></div>
+          </div>
+          <div class="inputPane">
+            <div class="inputAreaWrapper">
+              <div class="inputArea">
+                <div class="inputPlaceholder" id= "inputPlaceholder" style="visibility: visible">Enter a message</div>
+                <div class="input" id="input" contenteditable="true"></div>
+              </div>
+            </div>
+            <div class="sendButtonWrapper">
+              <button class="sendButton" onclick="send()" id="sendButton"></button>
+            </div>
+          </div>
+        </div>
+        <div class="placeHolderWrapper" id="contentPanePlaceHolder">
+          <div class="placeHolderImgWrapper">
+            <img class="contentPanePlaceHolderImg" id="contentPanePlaceHolderImg">
+          </div>
+          <p class="contentPanePlaceHolderText" id = "contentPanePlaceHolderText"></p>
+        </div>
+      </div>
+      <div class="mediaPane" style="display:none">
+        <div class="listHeader" id="listHeader">
+          <div class="listHeaderText" id="listHeaderText">Calls/Transfers</div>
+          <div class="videoListHeaderButtonWrapper">
+            <button class="videoListHeaderButton" onclick="toggleMediaPane()" id="videoListHeaderButton"></button>
+          </div>
+        </div>
+        <div class="callListWrapper" id = "callListWrapper">
+          <ul id="callList"> </ul>
+        </div>
+      </div>
+    </div>
+    <div class="loginPane" id="loginPane" >
+      <p class="loginHeader"><img class="loginImg" src="./images/favicon.ico" width="40" height="40"> Rich Chat</p>
+      <p class="loginBody">A sample web app using BBM Web SDK.</p>
+      <div class="loginStatus" id="loginStatus"></div>
+      <div id="loginBtnDiv" class="login" hidden>
+        <!--<center><button id="googleSignIn" class="loginBtn loginBtn--google">Sign in</button></center>-->
+		<center><button id="aadSignIn" class="loginBtn loginBtn--aad">Sign in</button></center>
+      </div>
+    </div>
+    <div class="settingsPane" id="settingsPane" style="display:none">
+      <p id="userName">Display Name:</p>
+      <p id="email">Email:</p>
+      <p id="domain">Domain:</p>
+      <p id="registrationState">Registration State:</p>
+      <p id="localRegId">Local RegID:</p>
+      <p id="localPIN">Local PIN:</p>
+      <div class="settingsPaneBtnDiv">
+        <button id = "logoutBtn" onclick="location.href='logout'" >Sign Out</button>
+        <button onclick="closeSettingsPane()" >Close Settings</button>
+		<button onclick="location.href='account'" >Account</button>
+      </div>
+    </div>
+	<!--<div class="modal" id="myModal" tabindex="-1" role="dialog">
+	  <div class="modal-dialog" role="document">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title">Modal title</h5>
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			  <span aria-hidden="true">&times;</span>
+			</button>
+		  </div>
+		  <div class="modal-body">
+			<p>Modal body text goes here.</p>
+		  </div>
+		  <div class="modal-footer">
+			<button type="button" class="btn btn-primary">Save changes</button>
+			<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+		  </div>
+		</div>
+	  </div>
+	</div>-->
+
+
+	<script>
+		var aadUser = "";
+		var aadUser = <%- JSON.stringify(user)%>;
+		var accessToken = <%- JSON.stringify(accessToken)%>;
+	</script>
+	<script src="js/util.js"></script>
+    <script src="js/rich_chat_script.js"></script>
+	  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	  <link rel="stylesheet" type="text/css" href="css/bootstrap-treeview.min.css" />  
+	  <script src="js/bootstrap-treeview.min.js"></script>
+	<script src="js/PoweredByAzure.js"></script>
+  </body>
+</html>
